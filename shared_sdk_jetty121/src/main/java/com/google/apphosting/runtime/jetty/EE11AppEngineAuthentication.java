@@ -20,8 +20,6 @@ import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.runtime.jetty.AppEngineAuthentication.AppEnginePrincipal;
-import com.google.apphosting.runtime.jetty.AppEngineAuthentication.AppEngineUserIdentity;
 import com.google.common.flogger.GoogleLogger;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;

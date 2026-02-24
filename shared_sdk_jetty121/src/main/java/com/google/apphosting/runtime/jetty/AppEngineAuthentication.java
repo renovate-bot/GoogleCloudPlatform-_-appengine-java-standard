@@ -16,36 +16,27 @@
 
 package com.google.apphosting.runtime.jetty;
 
-import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.flogger.GoogleLogger;
 import java.io.IOException;
-import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.function.Function;
-import javax.security.auth.Subject;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.eclipse.jetty.ee8.nested.Authentication;
-import org.eclipse.jetty.ee8.security.Authenticator;
 import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee8.security.SecurityHandler;
 import org.eclipse.jetty.ee8.security.ServerAuthException;
 import org.eclipse.jetty.ee8.security.UserAuthentication;
 import org.eclipse.jetty.ee8.security.authentication.DeferredAuthentication;
 import org.eclipse.jetty.ee8.security.authentication.LoginAuthenticator;
 import org.eclipse.jetty.security.DefaultIdentityService;
-import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.security.UserIdentity;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Session;
 import org.eclipse.jetty.util.URIUtil;
 
 /**
@@ -56,7 +47,7 @@ import org.eclipse.jetty.util.URIUtil;
  * users to a login URL using the {@link UserService}, and a custom {@link UserIdentity} that is
  * aware of the custom roles provided by the App Engine.
  */
-public class AppEngineAuthentication {
+public final class AppEngineAuthentication {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   /**
@@ -67,8 +58,6 @@ public class AppEngineAuthentication {
 
   private static final String AUTH_METHOD = "Google Login";
 
-  private static final String REALM_NAME = "Google App Engine";
-
   // Keep in sync with com.google.apphosting.runtime.jetty.JettyServletEngineAdapter.
   private static final String SKIP_ADMIN_CHECK_ATTR =
       "com.google.apphosting.internal.SkipAdminCheck";
@@ -77,9 +66,9 @@ public class AppEngineAuthentication {
    * Any authenticated user is a member of the {@code "*"} role, and any administrators are members
    * of the {@code "admin"} role. Any other roles will be logged and ignored.
    */
-  private static final String USER_ROLE = "*";
+  static final String USER_ROLE = "*";
 
-  private static final String ADMIN_ROLE = "admin";
+  static final String ADMIN_ROLE = "admin";
 
   /**
    * Inject custom {@link LoginService} and {@link Authenticator} implementations into the specified
@@ -245,169 +234,7 @@ public class AppEngineAuthentication {
     return buffer.toString();
   }
 
-  /**
-   * {@code AppEngineLoginService} is a custom Jetty {@link LoginService} that is aware of the two
-   * special role names implemented by Google App Engine. Any authenticated user is a member of the
-   * {@code "*"} role, and any administrators are members of the {@code "admin"} role. Any other
-   * roles will be logged and ignored.
-   */
-  private static class AppEngineLoginService implements LoginService {
-    private IdentityService identityService;
 
-    /**
-     * @return Get the name of the login service (aka Realm name)
-     */
-    @Override
-    public String getName() {
-      return REALM_NAME;
-    }
 
-    @Override
-    public UserIdentity login(
-        String s, Object o, Request request, Function<Boolean, Session> function) {
-      return loadUser();
-    }
-
-    /**
-     * Creates a new AppEngineUserIdentity based on information retrieved from the Users API.
-     *
-     * @return A AppEngineUserIdentity if a user is logged in, or null otherwise.
-     */
-    private AppEngineUserIdentity loadUser() {
-      UserService userService = UserServiceFactory.getUserService();
-      User engineUser = userService.getCurrentUser();
-      if (engineUser == null) {
-        return null;
-      }
-      return new AppEngineUserIdentity(new AppEnginePrincipal(engineUser));
-    }
-
-    @Override
-    public IdentityService getIdentityService() {
-      return identityService;
-    }
-
-    @Override
-    public void logout(UserIdentity user) {
-      // Jetty calls this on every request -- even if user is null!
-      if (user != null) {
-        logger.atFine().log("Ignoring logout call for: %s", user);
-      }
-    }
-
-    @Override
-    public void setIdentityService(IdentityService identityService) {
-      this.identityService = identityService;
-    }
-
-    @Override
-    public boolean validate(UserIdentity user) {
-      logger.atInfo().log("validate(%s) throwing UnsupportedOperationException.", user);
-      throw new UnsupportedOperationException();
-    }
-  }
-
-  /**
-   * {@code AppEnginePrincipal} is an implementation of {@link Principal} that represents a
-   * logged-in Google App Engine user.
-   */
-  public static class AppEnginePrincipal implements Principal {
-    private final User user;
-
-    public AppEnginePrincipal(User user) {
-      this.user = user;
-    }
-
-    public User getUser() {
-      return user;
-    }
-
-    @Override
-    public String getName() {
-      if ((user.getFederatedIdentity() != null) && (!user.getFederatedIdentity().isEmpty())) {
-        return user.getFederatedIdentity();
-      }
-      return user.getEmail();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      if (other instanceof AppEnginePrincipal) {
-        return user.equals(((AppEnginePrincipal) other).user);
-      } else {
-        return false;
-      }
-    }
-
-    @Override
-    public String toString() {
-      return user.toString();
-    }
-
-    @Override
-    public int hashCode() {
-      return user.hashCode();
-    }
-  }
-
-  /**
-   * {@code AppEngineUserIdentity} is an implementation of {@link UserIdentity} that represents a
-   * logged-in Google App Engine user.
-   */
-  public static class AppEngineUserIdentity implements UserIdentity {
-
-    private final AppEnginePrincipal userPrincipal;
-
-    public AppEngineUserIdentity(AppEnginePrincipal userPrincipal) {
-      this.userPrincipal = userPrincipal;
-    }
-
-    /*
-     * Only used by jaas and jaspi.
-     */
-    @Override
-    public Subject getSubject() {
-      logger.atInfo().log("getSubject() throwing UnsupportedOperationException.");
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Principal getUserPrincipal() {
-      return userPrincipal;
-    }
-
-    @Override
-    public boolean isUserInRole(String role) {
-      UserService userService = UserServiceFactory.getUserService();
-      if (userPrincipal == null) {
-        logger.atInfo().log("isUserInRole() called with null principal.");
-        return false;
-      }
-
-      if (USER_ROLE.equals(role)) {
-        return true;
-      }
-
-      if (ADMIN_ROLE.equals(role)) {
-        User user = userPrincipal.getUser();
-        if (user.equals(userService.getCurrentUser())) {
-          return userService.isUserAdmin();
-        } else {
-          // TODO: I'm not sure this will happen in
-          //   practice. If it does, we may need to pass an
-          //   application's admin list down somehow.
-          logger.atSevere().log("Cannot tell if non-logged-in user %s is an admin.", user);
-          return false;
-        }
-      } else {
-        logger.atWarning().log("Unknown role: %s.", role);
-        return false;
-      }
-    }
-
-    @Override
-    public String toString() {
-      return AppEngineUserIdentity.class.getSimpleName() + "('" + userPrincipal + "')";
-    }
-  }
+  private AppEngineAuthentication() {}
 }
