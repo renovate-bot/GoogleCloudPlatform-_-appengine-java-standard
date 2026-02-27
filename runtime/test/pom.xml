@@ -45,10 +45,12 @@
     <dependency>
        <groupId>org.eclipse.jetty</groupId>
        <artifactId>jetty-server</artifactId>
-     </dependency>
+      <version>${jetty.version}</version>
+    </dependency>
      <dependency>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-servlet</artifactId>
+        <version>${jetty.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
@@ -113,6 +115,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-client</artifactId>
+      <version>${jetty.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

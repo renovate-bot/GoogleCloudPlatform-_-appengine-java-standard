@@ -446,11 +446,6 @@
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-resources</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-distribution</artifactId>
-            <type>zip</type>
-        </dependency>
          <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>jetty121-assembly</artifactId>

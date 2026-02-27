@@ -134,12 +134,6 @@
           <url>${distributionManagement.snapshot.url}</url>
       </snapshotRepository>
   </distributionManagement>
-  <repositories>
-    <repository>
-      <id>webtide-harbor</id>
-      <url>https://harbor.webtide.com/releases</url>
-    </repository>
-  </repositories>
   <profiles>
       <profile>
           <id>sonatype-release</id>
@@ -210,10 +204,6 @@
     </activation>
       <repositories>
         <repository>
-            <id>webtide-harbor</id>
-            <url>https://harbor.webtide.com/releases</url>
-        </repository>
-        <repository>
           <id>aoss-artifact-registry</id>
           <name>AOSS Repository</name>
           <url>artifactregistry://us-maven.pkg.dev/cloud-aoss-1p/cloud-aoss-1p-java</url>
@@ -257,6 +247,15 @@
                   </plugin>
               </plugins>
           </build>
+      </profile>
+      <profile>
+          <id>webtide-harbor-profile</id>
+          <repositories>
+              <repository>
+                  <id>webtide-harbor</id>
+                  <url>https://harbor.webtide.com/releases</url>
+              </repository>
+          </repositories>
       </profile>
   </profiles>
 
@@ -574,13 +573,6 @@
         <groupId>org.jspecify</groupId>
         <artifactId>jspecify</artifactId>
         <version>1.0.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-bom</artifactId>
-        <version>${jetty.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.eclipse.jetty.toolchain</groupId>
