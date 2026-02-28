@@ -58,7 +58,6 @@ public class RemoteApiSharedTests {
   private final String remoteApiPath;
   private final int port;
   private final boolean testKeysCreatedBeforeRemoteApiInstall;
-  private final boolean expectRemoteAppIdsOnKeysAfterInstallingRemoteApi;
 
   /**
    * Builder for a {@link RemoteApiSharedTests} with some sensible defaults.
@@ -81,14 +80,6 @@ public class RemoteApiSharedTests {
      * to generate Keys until the Remote API is installed.
      */
     private boolean testKeysCreatedBeforeRemoteApiInstall = true;
-
-    /**
-     * Allow these tests to be turned off because they rely on recent changes that haven't been
-     * rolled out everywhere yet.  Targeting 1.8.8.
-     * See http://b/11254141 and http://b/10788115
-     * TODO: Remove this.
-     */
-    private boolean expectRemoteAppIdsOnKeysAfterInstallingRemoteApi = true;
 
     @CanIgnoreReturnValue
     public Builder setLocalAppId(String localAppId) {
@@ -135,8 +126,7 @@ public class RemoteApiSharedTests {
           server,
           remoteApiPath,
           port,
-          testKeysCreatedBeforeRemoteApiInstall,
-          expectRemoteAppIdsOnKeysAfterInstallingRemoteApi);
+          testKeysCreatedBeforeRemoteApiInstall);
     }
   }
 
@@ -148,8 +138,7 @@ public class RemoteApiSharedTests {
       String server,
       String remoteApiPath,
       int port,
-      boolean testKeysCreatedBeforeRemoteApiInstall,
-      boolean expectRemoteAppIdsOnKeysAfterInstallingRemoteApi) {
+      boolean testKeysCreatedBeforeRemoteApiInstall) {
     this.localAppId = localAppId;
     this.remoteAppId = remoteAppId;
     this.username = username;
@@ -158,8 +147,6 @@ public class RemoteApiSharedTests {
     this.remoteApiPath = remoteApiPath;
     this.port = port;
     this.testKeysCreatedBeforeRemoteApiInstall = testKeysCreatedBeforeRemoteApiInstall;
-    this.expectRemoteAppIdsOnKeysAfterInstallingRemoteApi =
-        expectRemoteAppIdsOnKeysAfterInstallingRemoteApi;
   }
 
   /**
@@ -314,8 +301,6 @@ public class RemoteApiSharedTests {
         DatastoreService ds, Supplier<Key> keySupplier, Supplier<Entity> entitySupplier) {
       // Note that we can't use local keys here.  Query will fail if you set an ancestor whose app
       // id does not match the "global" AppIdNamespace.
-      // TODO: Consider making it more lenient, but it's not a big deal.  Users can
-      // just use a Key that was created after installing the Remote API.
       Entity entity = new Entity(getFreshKindName());
       entity.setProperty("prop1", 99L);
       ds.put(entity);
@@ -399,9 +384,7 @@ public class RemoteApiSharedTests {
     public Key get() {
       // This assumes that the remote api has already been installed.
       Key key = KeyFactory.createKey(kind, "somename" + nameCounter);
-      if (expectRemoteAppIdsOnKeysAfterInstallingRemoteApi) {
-        assertRemoteAppId(key);
-      }
+      assertRemoteAppId(key);
       nameCounter++;
 
       return key;
@@ -424,9 +407,7 @@ public class RemoteApiSharedTests {
     public Entity get() {
       // This assumes that the remote api has already been installed.
       Entity entity = new Entity(kind);
-      if (expectRemoteAppIdsOnKeysAfterInstallingRemoteApi) {
-        assertRemoteAppId(entity.getKey());
-      }
+      assertRemoteAppId(entity.getKey());
 
       return entity;
     }

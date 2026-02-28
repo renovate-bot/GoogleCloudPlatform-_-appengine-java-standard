@@ -320,12 +320,7 @@ public class BlobstoreApiUsage {
         } catch (IOException e) {
           // ok
         }
-        // This is a hack to get around the fact that java 7 classes are not yet available in
-        // blaze but tests are running under a Java 7 runtime.
-        // TODO: Reference AutoCloseable directly once java 7 classes are available at compile
-        // time.
-        Class<?> autoCloseable = Closeable.class.getInterfaces()[0];
-        return classes(Object.class, InputStream.class, autoCloseable, Closeable.class);
+        return classes(Object.class, InputStream.class, AutoCloseable.class, Closeable.class);
       } finally {
         helper.tearDown();
       }

@@ -45,7 +45,6 @@ import org.mockito.junit.MockitoRule;
 /**
  * Test for {@link RemoteDatastore}
  *
- * @author maxr@google.com (Max Ross)
  */
 @RunWith(JUnit4.class)
 public class RemoteDatastoreTest {
@@ -356,11 +355,7 @@ public class RemoteDatastoreTest {
 
     EntityProto.Builder entity = EntityProto.newBuilder().setKey(key);
 
-    // TODO: There are utilities for this, but they are all under
-    // apphosting/datastore/testing which we may not want to depend on from here.
-    OnestoreEntity.Path group =
-        OnestoreEntity.Path.newBuilder().addElement(key.getPath().getElement(0)).build();
-    entity.setEntityGroup(group);
+    entity.setEntityGroup(OnestoreEntity.Path.newBuilder().addElement(key.getPath().getElement(0)));
 
     addProperty(entity, "someproperty", index);
 
